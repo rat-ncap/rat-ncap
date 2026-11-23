@@ -1,0 +1,771 @@
+_target_: tonic.torch.agents.ES
+model:
+  _target_: models.ncap_es
+  afferent_feedback:
+    _target_: models.AfferentFeedbackNetwork
+    observation_prefixes:
+      limbFL:
+      - body/proprio_pos
+      - body/proprio_vel
+      - body/proprio_trq
+      - body/tactile
+      limbFR:
+      - body/proprio_pos
+      - body/proprio_vel
+      - body/proprio_trq
+      - body/tactile
+      limbHL:
+      - body/proprio_pos
+      - body/proprio_vel
+      - body/proprio_trq
+      - body/tactile
+      limbHR:
+      - body/proprio_pos
+      - body/proprio_vel
+      - body/proprio_trq
+      - body/tactile
+      lumbarE:
+      - body/proprio_pos
+      - body/proprio_vel
+      - body/proprio_trq
+      lumbarBT[<-]:
+      - body/proprio_pos
+      - body/proprio_vel
+      - body/proprio_trq
+      lumbarBT[->]:
+      - body/proprio_pos
+      - body/proprio_vel
+      - body/proprio_trq
+    action_segments:
+    - limbFL
+    - limbFR
+    - limbHL
+    - limbHR
+    lateral_segments:
+      F:
+      - limbFL
+      - limbFR
+      H:
+      - limbHL
+      - limbHR
+      Lbt:
+      - lumbarBT[<-]
+      - lumbarBT[->]
+    sagittal_segments:
+      Le: lumbarE
+    transverse_segments:
+      Lbt: lumbarBT
+    action_prefixes:
+    - flx
+    - ext
+    observation_prefix_shorthand:
+      body/proprio_pos: pos
+      body/proprio_vel: vel
+      body/proprio_trq: trq
+      body/tactile: tac
+    reset: true
+    reset_weight_id_override:
+      _target_: utils.collections.GlobDict
+      '*F>Fc': 0
+      '*H>Hc': 0
+      '*F>H': 0
+      '*H>F': 0
+      '*F>Hc': 0
+      '*H>Fc': 0
+      '*F>Le': 0
+      '*H>Le': 0
+      '*Le>F': 0
+      '*Le>H': 0
+      '*F>Lbt': 0
+      '*H>Lbt': 0
+      '*F>Lbtc': 0
+      '*H>Lbtc': 0
+      '*Lbt>F': 0
+      '*Lbt>H': 0
+      '*Lbt>Fc': 0
+      '*Lbt>Hc': 0
+    sensor_activation:
+      _target_: torch.nn.Hardtanh
+      _partial_: true
+      min_val: 0.0
+      max_val: 1.0
+    reset_activation:
+      _target_: torch.nn.Hardtanh
+      _partial_: true
+      min_val: -1.0
+      max_val: 1.0
+    on_initialize_sensor:
+      _target_: utils.torch.block.block_initializer
+      weight_init:
+        '*': []
+      bias_init:
+        '*':
+        - negative
+      initializers:
+        negative:
+          _target_: models.constrain
+          _partial_: true
+          max: 0.0
+    on_initialize_reset:
+      _target_: utils.torch.block.block_initializer
+      weight_init: {}
+      bias_init:
+        '*':
+        - negative
+      initializers:
+        negative:
+          _target_: models.constrain
+          _partial_: true
+          max: 0.0
+  pattern_formation:
+    _target_: models.SynergyPatternFormationNetwork
+    observation_prefixes:
+      bc:
+      - speed
+      limbFL:
+      - rg
+      - body/proprio_pos
+      - body/proprio_vel
+      - body/proprio_trq
+      - body/tactile
+      limbFR:
+      - rg
+      - body/proprio_pos
+      - body/proprio_vel
+      - body/proprio_trq
+      - body/tactile
+      limbHL:
+      - rg
+      - body/proprio_pos
+      - body/proprio_vel
+      - body/proprio_trq
+      - body/tactile
+      limbHR:
+      - rg
+      - body/proprio_pos
+      - body/proprio_vel
+      - body/proprio_trq
+      - body/tactile
+      lumbarE:
+      - body/proprio_pos
+      - body/proprio_vel
+      - body/proprio_trq
+      lumbarBT[<-]:
+      - body/proprio_pos
+      - body/proprio_vel
+      - body/proprio_trq
+      lumbarBT[->]:
+      - body/proprio_pos
+      - body/proprio_vel
+      - body/proprio_trq
+    action_prefixes:
+    - body/actuators_pos
+    action_segments:
+    - limbFL
+    - limbFR
+    - limbHL
+    - limbHR
+    - lumbarE
+    - lumbarBT
+    lateral_segments:
+      F:
+      - limbFL
+      - limbFR
+      H:
+      - limbHL
+      - limbHR
+      Lbt:
+      - lumbarBT[<-]
+      - lumbarBT[->]
+    sagittal_segments:
+      Le: lumbarE
+      BCs: bc
+    transverse_segments:
+      Lbt: lumbarBT
+    action_synergies:
+      limbFL:
+      - limbFL
+      limbFR:
+      - limbFR
+      limbHL:
+      - limbHL
+      limbHR:
+      - limbHR
+      lumbarE:
+      - lumbarE
+      lumbarBT:
+      - lumbarBT[<-]
+      - lumbarBT[->]
+    observation_prefix_shorthand:
+      rg: rg
+      body/proprio_pos: pos
+      body/proprio_vel: vel
+      body/proprio_trq: trq
+      body/tactile: tac
+      speed: speed
+    action_prefix_shorthand:
+      body/actuators_pos: pos
+    synergies:
+      F_flx_1:
+        body/actuators_pos: pos_F_flx_1
+      F_flx_2:
+        body/actuators_pos: pos_F_flx_2
+      F_ext_1:
+        body/actuators_pos: pos_F_ext_1
+      F_ext_2:
+        body/actuators_pos: pos_F_ext_2
+      F_ext_3:
+        body/actuators_pos: pos_F_ext_3
+      H_flx_1:
+        body/actuators_pos: pos_H_flx_1
+      H_flx_2:
+        body/actuators_pos: pos_H_flx_2
+      H_ext_1:
+        body/actuators_pos: pos_H_ext_1
+      H_ext_2:
+        body/actuators_pos: pos_H_ext_2
+      H_ext_3:
+        body/actuators_pos: pos_H_ext_3
+      Le_1:
+        body/actuators_pos: pos_Le_1
+      Le_2:
+        body/actuators_pos: pos_Le_2
+      Le_3:
+        body/actuators_pos: pos_Le_3
+      Le_4:
+        body/actuators_pos: pos_Le_4
+      Le_5:
+        body/actuators_pos: pos_Le_5
+      Le_6:
+        body/actuators_pos: pos_Le_6
+      Lbt_1:
+        body/actuators_pos: pos_Lbt_1
+      Lbt_1c:
+        body/actuators_pos: -(pos_Lbt_1)
+      Lbt_2:
+        body/actuators_pos: pos_Lbt_2
+      Lbt_2c:
+        body/actuators_pos: -(pos_Lbt_2)
+      Lbt_3:
+        body/actuators_pos: pos_Lbt_3
+      Lbt_3c:
+        body/actuators_pos: -(pos_Lbt_3)
+      Lbt_4:
+        body/actuators_pos: pos_Lbt_4
+      Lbt_4c:
+        body/actuators_pos: -(pos_Lbt_4)
+      Lbt_5:
+        body/actuators_pos: pos_Lbt_5
+      Lbt_5c:
+        body/actuators_pos: -(pos_Lbt_5)
+      Lbt_6:
+        body/actuators_pos: pos_Lbt_6
+      Lbt_6c:
+        body/actuators_pos: -(pos_Lbt_6)
+    segment_synergies:
+      limbFL:
+      - F_flx_1
+      - F_flx_1
+      - F_flx_1
+      - F_flx_2
+      - F_flx_2
+      - F_flx_2
+      - F_ext_1
+      - F_ext_1
+      - F_ext_1
+      - F_ext_2
+      - F_ext_2
+      - F_ext_2
+      - F_ext_3
+      limbFR:
+      - F_flx_1
+      - F_flx_1
+      - F_flx_1
+      - F_flx_2
+      - F_flx_2
+      - F_flx_2
+      - F_ext_1
+      - F_ext_1
+      - F_ext_1
+      - F_ext_2
+      - F_ext_2
+      - F_ext_2
+      - F_ext_3
+      limbHL:
+      - H_flx_1
+      - H_flx_1
+      - H_flx_1
+      - H_flx_2
+      - H_flx_2
+      - H_flx_2
+      - H_ext_1
+      - H_ext_1
+      - H_ext_1
+      - H_ext_2
+      - H_ext_2
+      - H_ext_2
+      - H_ext_3
+      limbHR:
+      - H_flx_1
+      - H_flx_1
+      - H_flx_1
+      - H_flx_2
+      - H_flx_2
+      - H_flx_2
+      - H_ext_1
+      - H_ext_1
+      - H_ext_1
+      - H_ext_2
+      - H_ext_2
+      - H_ext_2
+      - H_ext_3
+      lumbarE:
+      - Le_1
+      - Le_2
+      - Le_3
+      - Le_4
+      - Le_5
+      - Le_6
+      lumbarBT[<-]:
+      - Lbt_1
+      - Lbt_2
+      - Lbt_3
+      - Lbt_4
+      - Lbt_5
+      - Lbt_6
+      lumbarBT[->]:
+      - Lbt_1c
+      - Lbt_2c
+      - Lbt_3c
+      - Lbt_4c
+      - Lbt_5c
+      - Lbt_6c
+    select_activation:
+      _target_: torch.nn.Hardtanh
+      _partial_: true
+      min_val: 0.0
+      max_val: 1.0
+    synergy_activation:
+      _target_: torch.nn.Hardtanh
+      _partial_: true
+      min_val: 0.0
+      max_val: 1.0
+    select_weight_id_override:
+      _target_: utils.collections.GlobDict
+      rgF>F: rgF>F
+      rgH>H: rgH>H
+      rgF>Le: rgF>Le
+      rgH>Le: rgH>Le
+      rgF>Lbt: rgF>Lbt
+      rgH>Lbt: rgH>Lbt
+      rgF>Lbtc: rgF>Lbtc
+      rgH>Lbtc: rgH>Lbtc
+      speedBCs>F: speedBCs>F
+      speedBCs>H: speedBCs>H
+      speedBCs>Le: speedBCs>Le
+      speedBCs>Lbt: speedBCs>Lbt
+      '*F>Fc': 0
+      '*H>Hc': 0
+      '*F>H': 0
+      '*H>F': 0
+      '*F>Hc': 0
+      '*H>Fc': 0
+      '*F>Le': 0
+      '*H>Le': 0
+      '*Le>F': 0
+      '*Le>H': 0
+      '*F>Lbt': 0
+      '*H>Lbt': 0
+      '*F>Lbtc': 0
+      '*H>Lbtc': 0
+      '*Lbt>F': 0
+      '*Lbt>H': 0
+      '*Lbt>Fc': 0
+      '*Lbt>Hc': 0
+    on_initialize_select:
+      _target_: utils.torch.block.block_initializer
+      weight_init:
+        rgF>F:
+        - - flx
+          - - 0
+            - 1
+            - 2
+          - 1.0
+        - - flx
+          - - 3
+            - 4
+            - 5
+          - 0.01
+        - - flx2
+          - - 0
+            - 1
+            - 2
+          - 0.01
+        - - flx2
+          - - 3
+            - 4
+            - 5
+          - 1.0
+        - - ext
+          - - 6
+            - 7
+            - 8
+          - 1.0
+        - - ext
+          - - 9
+            - 10
+            - 11
+            - 12
+          - 0.01
+        - - ext2
+          - - 6
+            - 7
+            - 8
+          - 0.01
+        - - ext2
+          - - 9
+            - 10
+            - 11
+            - 12
+          - 1.0
+        - - flx
+          - - 6
+            - 7
+            - 8
+            - 9
+            - 10
+            - 11
+            - 12
+          - -0.01
+        - - flx2
+          - - 6
+            - 7
+            - 8
+            - 9
+            - 10
+            - 11
+            - 12
+          - -0.01
+        - - ext
+          - - 0
+            - 1
+            - 2
+            - 3
+            - 4
+            - 5
+          - -0.01
+        - - ext2
+          - - 0
+            - 1
+            - 2
+            - 3
+            - 4
+            - 5
+          - -0.01
+        - sign
+        rgH>H:
+        - - flx
+          - - 0
+            - 1
+            - 2
+          - 1.0
+        - - flx
+          - - 3
+            - 4
+            - 5
+          - 0.01
+        - - flx2
+          - - 0
+            - 1
+            - 2
+          - 0.01
+        - - flx2
+          - - 3
+            - 4
+            - 5
+          - 1.0
+        - - ext
+          - - 6
+            - 7
+            - 8
+          - 1.0
+        - - ext
+          - - 9
+            - 10
+            - 11
+            - 12
+          - 0.01
+        - - ext2
+          - - 6
+            - 7
+            - 8
+          - 0.01
+        - - ext2
+          - - 9
+            - 10
+            - 11
+            - 12
+          - 1.0
+        - - flx
+          - - 6
+            - 7
+            - 8
+            - 9
+            - 10
+            - 11
+            - 12
+          - -0.01
+        - - flx2
+          - - 6
+            - 7
+            - 8
+            - 9
+            - 10
+            - 11
+            - 12
+          - -0.01
+        - - ext
+          - - 0
+            - 1
+            - 2
+            - 3
+            - 4
+            - 5
+          - -0.01
+        - - ext2
+          - - 0
+            - 1
+            - 2
+            - 3
+            - 4
+            - 5
+          - -0.01
+        - sign
+        rgF>Le:
+        - - - flx
+            - ext
+            - flx2
+            - ext2
+          - null
+          - 0.01
+        - sparse
+        rgH>Le:
+        - - - flx
+            - ext
+            - flx2
+            - ext2
+          - null
+          - 0.01
+        - sparse
+        rgF>Lbt:
+        - - - flx
+            - ext
+            - flx2
+            - ext2
+          - null
+          - 0.01
+        - sparse
+        rgF>Lbtc:
+        - - - flx
+            - ext
+            - flx2
+            - ext2
+          - null
+          - 0.01
+        - sparse
+        rgH>Lbt:
+        - - - flx
+            - ext
+            - flx2
+            - ext2
+          - null
+          - 0.01
+        - sparse
+        rgH>Lbtc:
+        - - - flx
+            - ext
+            - flx2
+            - ext2
+          - null
+          - 0.01
+        - sparse
+      initializers:
+        sparse:
+          _target_: models.constrain
+          _partial_: true
+          zero: true
+        positive:
+          _target_: models.constrain
+          _partial_: true
+          min: 0.0
+        negative:
+          _target_: models.constrain
+          _partial_: true
+          max: 0.0
+        sign:
+          _target_: models.constrain
+          _partial_: true
+          sign: true
+    on_initialize_synergy:
+      _target_: utils.torch.block.block_initializer
+      weight_init:
+        pos_F_flx_1:
+        - - 0
+          - elbow_L
+          - -0.01
+        - sign
+        pos_F_flx_2:
+        - - 0
+          - shoulder_L_extend
+          - -0.01
+        - sign
+        pos_F_ext_1:
+        - - 0
+          - - shoulder_L_extend
+            - elbow_L
+          - 0.01
+        - sign
+        pos_F_ext_2:
+        - - 0
+          - - shoulder_L_extend
+            - elbow_L
+          - 0.01
+        - - 0
+          - wrist_L
+          - -0.01
+        - sign
+        pos_F_ext_3:
+        - - 0
+          - - shoulder_L_extend
+            - elbow_L
+          - 0.01
+        - - 0
+          - wrist_L
+          - -0.01
+        - sign
+        pos_H_flx_1:
+        - - 0
+          - - knee_L
+            - ankle_L
+          - -0.01
+        - sign
+        pos_H_flx_2:
+        - - 0
+          - hip_L_extend
+          - -0.01
+        - sign
+        pos_H_ext_1:
+        - - 0
+          - - hip_L_extend
+          - 0.01
+        - sign
+        pos_H_ext_2:
+        - - 0
+          - - hip_L_extend
+            - knee_L
+            - ankle_L
+          - 0.01
+        - - 0
+          - toe_L
+          - -0.01
+        - sign
+        pos_H_ext_3:
+        - - 0
+          - - hip_L_extend
+            - knee_L
+            - ankle_L
+          - 0.01
+        - - 0
+          - toe_L
+          - -0.01
+        - sign
+        pos_Le_*:
+        - sign
+        pos_Lbt_*:
+        - sign
+      bias_init:
+        pos_F:
+        - - - scapula_L_supinate
+            - scapula_L_abduct
+            - scapula_L_extend
+            - shoulder_L_supinate
+            - shoulder_L_extend
+            - elbow_L
+            - wrist_L
+            - finger_L
+          - _target_: envs.bodies.rat_actuators_pos_mid_01
+            segment: limbFL
+          - freeze
+        pos_H:
+        - - - hip_L_supinate
+            - hip_L_abduct
+            - hip_L_extend
+            - knee_L
+            - ankle_L
+            - toe_L
+          - _target_: envs.bodies.rat_actuators_pos_mid_01
+            segment: limbHL
+          - freeze
+        pos_Le:
+        - - - lumbar_extend
+          - _target_: envs.bodies.rat_actuators_pos_mid_01
+            segment: lumbarE
+          - freeze
+        pos_Lbt:
+        - - - lumbar_bend
+            - lumbar_twist
+          - _target_: envs.bodies.rat_actuators_pos_mid_01
+            segment: lumbarBT
+          - freeze
+      initializers:
+        none:
+          _target_: models.constrain
+          _partial_: true
+        sign:
+          _target_: models.constrain
+          _partial_: true
+          sign: true
+        freeze:
+          _target_: models.constrain
+          _partial_: true
+          freeze: true
+  rhythm_generation:
+    _target_: models.RhythmGenerationCircuit
+    flx_delays:
+    - 0.25
+    - 0.0
+    - 0.2
+    - 0.0
+    ext_oscillator: false
+    init:
+      _target_: models.init_rg_rat
+      _partial_: true
+      grad: false
+      scale: 0.8
+  brainstem_command:
+    _target_: models.BrainstemCommandNetwork
+    commands:
+    - speed
+    init:
+      _target_: models.init_bc_fixed
+      _partial_: true
+      weight: 1.0
+      bias: 0.0
+      weight_grad: false
+      bias_grad: false
+    repeat: 1
+  constrainer:
+    _target_: models.Constrainer
+  observation_rectifier:
+    _target_: models.ObservationRectifier
+    rectification:
+      target_vx: null
+      body/proprio_pos*: flip
+      body/proprio_vel*: flip
+      body/proprio_trq*: flip
+      body/tactile_foot*: null
+    split_key:
+      body/proprio_*_lumbarBT: true
+    weight: false
+    bias: false
+rollout_steps: 100

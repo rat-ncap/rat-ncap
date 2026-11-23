@@ -1,0 +1,30 @@
+# @package _global_
+# MLP + ES flexor-extensor interface.
+hydra:
+  sweeper:
+    params:
+      seed: 1
+
+defaults:
+  - /1_train/0_base_es
+  - /body/rat/controller: flxext
+  - _self_
+
+model:
+  _target_: models.mlp_es
+  actor_hidden_sizes: [256, 256]
+  actor_hidden_activation:
+    _target_: torch.nn.ReLU
+    _partial_: true
+  actor_hidden_init: null
+  actor_head_activation:
+    _target_: torch.nn.Hardtanh
+    _partial_: true
+    min_val: 0.0
+    max_val: 1.0
+  actor_head_bias: true
+  actor_head_init: null
+  observation_normalizer: true
+
+trainer:
+  epochs: 100000

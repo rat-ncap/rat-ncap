@@ -1,0 +1,6 @@
+# @package _global_
+# MLP + PPO position interface.
+defaults:
+  - /1_train/4_3_mlp_ppo_flxext
+  - override /body/rat/controller: pos
+  - _self_

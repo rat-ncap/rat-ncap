@@ -1,0 +1,45 @@
+# @package model.pattern_formation.select_weight_id_override
+# Each limb PF only sees its own RG.
+# Lumbar sees RG from all limbs.
+# Local limb and lumbar AF enabled.
+_target_: utils.collections.GlobDict
+# Allow local RG.
+rgF>F: rgF>F
+rgH>H: rgH>H
+# Allow all RG to lumbar.
+rgF>Le: rgF>Le
+rgH>Le: rgH>Le
+rgF>Lbt: rgF>Lbt
+rgH>Lbt: rgH>Lbt
+rgF>Lbtc: rgF>Lbtc
+rgH>Lbtc: rgH>Lbtc
+# Allow brainstem commands.
+speedBCs>F: speedBCs>F
+speedBCs>H: speedBCs>H
+speedBCs>Le: speedBCs>Le
+speedBCs>Lbt: speedBCs>Lbt
+# Disable contralateral AF.
+'*F>Fc': 0
+'*H>Hc': 0
+# Disable ipsilateral AF.
+'*F>H': 0
+'*H>F': 0
+# Disable diagonal-limb AF.
+'*F>Hc': 0
+'*H>Fc': 0
+# Disable limb->lumbarE AF.
+'*F>Le': 0
+'*H>Le': 0
+# Disable lumbarE->limb AF.
+'*Le>F': 0
+'*Le>H': 0
+# Disable limb->lumbarBT AF.
+'*F>Lbt': 0
+'*H>Lbt': 0
+'*F>Lbtc': 0
+'*H>Lbtc': 0
+# Disable lumbarBT->limb AF.
+'*Lbt>F': 0
+'*Lbt>H': 0
+'*Lbt>Fc': 0
+'*Lbt>Hc': 0

@@ -1,0 +1,33 @@
+# @package body.actionable_dofs
+# limbs28_lumbar3 with only the limbs' flexion/extension (sagittal) DOFs actionable, for the planar
+# limb DOF ablation. The 10 out-of-plane DOFs (scapula supinate/abduct and shoulder supinate per
+# forelimb, hip supinate/abduct per hindlimb) get zero controller torque and leave the model's
+# proprioception (the muscle actions keep every joint); pair with `body/rat/limbs: planar` to hold
+# them stiff.
+limbFL:
+  - scapula_L_extend
+  - shoulder_L_extend
+  - elbow_L
+  - wrist_L
+  - finger_L
+limbFR:
+  - scapula_R_extend
+  - shoulder_R_extend
+  - elbow_R
+  - wrist_R
+  - finger_R
+lumbarE:
+  - lumbar_extend
+lumbarBT:
+  - lumbar_bend
+  - lumbar_twist
+limbHL:
+  - hip_L_extend
+  - knee_L
+  - ankle_L
+  - toe_L
+limbHR:
+  - hip_R_extend
+  - knee_R
+  - ankle_R
+  - toe_R

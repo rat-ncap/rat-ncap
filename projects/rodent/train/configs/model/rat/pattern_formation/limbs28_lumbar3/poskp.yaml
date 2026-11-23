@@ -1,0 +1,238 @@
+# @package model.pattern_formation
+# 2-layer pattern formation network with 5 unique synergies per limb group (flx_1, flx_2, ext_1,
+# ext_2, ext_3), as in `flxext.yaml`: flx_1, flx_2, ext_1 and ext_2 are each activated through 3
+# select routes, ext_3 through 1 (13 routes per limb). 6 lumbarE synergies and 6 lumbarBT synergies
+# (plus their rightward negations). Use with on_initialize_select: limbs28_lumbar3/init_rg. For the
+# limbs28_lumbar3 body using the pos_stiffness controller. Synergy sign constraints mirror
+# `flxext.yaml`: muscle_flx corresponds to negative position and muscle_ext to positive position, so
+# a flxext synergy with (flx +, ext -) on a joint becomes a negative position weight on that joint,
+# and (flx -, ext +) becomes a positive one. Constrains all tonic position biases to the default
+# pose. Stiffness synergy weights are unconstrained.
+_target_: models.SynergyPatternFormationNetwork
+# ==================================================================================================
+# 1. Specify limbs, observations, and actions.
+
+# lumbarBT[<-] and lumbarBT[->] are separate observations so that limbs can distinguish leftward
+# from rightward bend/twist. See `flxext.yaml` for the full rationale.
+# Specify the observation prefixes of each body segment, and the body segments to which actions are
+# applied. The `bc` segment holds brainstem commands.
+observation_prefixes:
+  bc: [speed]
+  limbFL: [rg, body/proprio_pos, body/proprio_vel, body/proprio_trq, body/tactile]
+  limbFR: ${.limbFL}
+  limbHL: ${.limbFL}
+  limbHR: ${.limbFL}
+  lumbarE: [body/proprio_pos, body/proprio_vel, body/proprio_trq]
+  'lumbarBT[<-]': ${.lumbarE}
+  'lumbarBT[->]': ${.lumbarE}
+action_prefixes: [body/actuators_pos, body/actuators_kp]
+action_segments: [limbFL, limbFR, limbHL, limbHR, lumbarE, lumbarBT]
+
+# Specify structural relations between segments.
+lateral_segments:
+  F: [limbFL, limbFR]
+  H: [limbHL, limbHR]
+  Lbt: ['lumbarBT[<-]', 'lumbarBT[->]']
+sagittal_segments:
+  Le: lumbarE
+  BCs: bc
+transverse_segments:
+  Lbt: lumbarBT
+
+# Map action segments from synergy activations (based on observation segments).
+action_synergies:
+  limbFL: [limbFL]
+  limbFR: [limbFR]
+  limbHL: [limbHL]
+  limbHR: [limbHR]
+  lumbarE: [lumbarE]
+  lumbarBT: ['lumbarBT[<-]', 'lumbarBT[->]']
+
+observation_prefix_shorthand:
+  rg: rg
+  body/proprio_pos: pos
+  body/proprio_vel: vel
+  body/proprio_trq: trq
+  body/tactile: tac
+  speed: speed
+action_prefix_shorthand: {body/actuators_pos: pos, body/actuators_kp: kp}
+
+# ==================================================================================================
+# 2. Specify PF architecture.
+
+# Each synergy names its synergy layer weight ID (a column over the segment's actuators) per action
+# prefix. Synergies are listed per synergy segment below; lateral pairs list the same synergies.
+# Limb RG units [flx, flx2] drive the flx synergies and [ext, ext2] the ext synergies.
+synergies:
+  F_flx_1: {body/actuators_pos: pos_F_flx_1, body/actuators_kp: kp_F_flx_1}
+  F_flx_2: {body/actuators_pos: pos_F_flx_2, body/actuators_kp: kp_F_flx_2}
+  F_ext_1: {body/actuators_pos: pos_F_ext_1, body/actuators_kp: kp_F_ext_1}
+  F_ext_2: {body/actuators_pos: pos_F_ext_2, body/actuators_kp: kp_F_ext_2}
+  F_ext_3: {body/actuators_pos: pos_F_ext_3, body/actuators_kp: kp_F_ext_3}
+
+  H_flx_1: {body/actuators_pos: pos_H_flx_1, body/actuators_kp: kp_H_flx_1}
+  H_flx_2: {body/actuators_pos: pos_H_flx_2, body/actuators_kp: kp_H_flx_2}
+  H_ext_1: {body/actuators_pos: pos_H_ext_1, body/actuators_kp: kp_H_ext_1}
+  H_ext_2: {body/actuators_pos: pos_H_ext_2, body/actuators_kp: kp_H_ext_2}
+  H_ext_3: {body/actuators_pos: pos_H_ext_3, body/actuators_kp: kp_H_ext_3}
+
+  Le_1: {body/actuators_pos: pos_Le_1, body/actuators_kp: kp_Le_1}
+  Le_2: {body/actuators_pos: pos_Le_2, body/actuators_kp: kp_Le_2}
+  Le_3: {body/actuators_pos: pos_Le_3, body/actuators_kp: kp_Le_3}
+  Le_4: {body/actuators_pos: pos_Le_4, body/actuators_kp: kp_Le_4}
+  Le_5: {body/actuators_pos: pos_Le_5, body/actuators_kp: kp_Le_5}
+  Le_6: {body/actuators_pos: pos_Le_6, body/actuators_kp: kp_Le_6}
+  # Rightward lumbar bend/twist synergies are the negated leftward ones for position. Stiffness is a
+  # gain, so its weights are shared unnegated.
+  Lbt_1: {body/actuators_pos: pos_Lbt_1, body/actuators_kp: kp_Lbt_1}
+  Lbt_1c: {body/actuators_pos: '-(pos_Lbt_1)', body/actuators_kp: kp_Lbt_1}
+  Lbt_2: {body/actuators_pos: pos_Lbt_2, body/actuators_kp: kp_Lbt_2}
+  Lbt_2c: {body/actuators_pos: '-(pos_Lbt_2)', body/actuators_kp: kp_Lbt_2}
+  Lbt_3: {body/actuators_pos: pos_Lbt_3, body/actuators_kp: kp_Lbt_3}
+  Lbt_3c: {body/actuators_pos: '-(pos_Lbt_3)', body/actuators_kp: kp_Lbt_3}
+  Lbt_4: {body/actuators_pos: pos_Lbt_4, body/actuators_kp: kp_Lbt_4}
+  Lbt_4c: {body/actuators_pos: '-(pos_Lbt_4)', body/actuators_kp: kp_Lbt_4}
+  Lbt_5: {body/actuators_pos: pos_Lbt_5, body/actuators_kp: kp_Lbt_5}
+  Lbt_5c: {body/actuators_pos: '-(pos_Lbt_5)', body/actuators_kp: kp_Lbt_5}
+  Lbt_6: {body/actuators_pos: pos_Lbt_6, body/actuators_kp: kp_Lbt_6}
+  Lbt_6c: {body/actuators_pos: '-(pos_Lbt_6)', body/actuators_kp: kp_Lbt_6}
+
+# Synergies activated by each synergy segment.
+segment_synergies:
+# Listing a synergy n times gives it n select routes (labeled name, name#1, name#2).
+# Select init indices: flx_1 [0, 1, 2], flx_2 [3, 4, 5], ext_1 [6, 7, 8], ext_2 [9, 10, 11],
+# ext_3 [12].
+  limbFL: [
+    F_flx_1, F_flx_1, F_flx_1,
+    F_flx_2, F_flx_2, F_flx_2,
+    F_ext_1, F_ext_1, F_ext_1,
+    F_ext_2, F_ext_2, F_ext_2,
+    F_ext_3,
+  ]
+  limbFR: ${.limbFL}
+  limbHL: [
+    H_flx_1, H_flx_1, H_flx_1,
+    H_flx_2, H_flx_2, H_flx_2,
+    H_ext_1, H_ext_1, H_ext_1,
+    H_ext_2, H_ext_2, H_ext_2,
+    H_ext_3,
+  ]
+  limbHR: ${.limbHL}
+  lumbarE: [Le_1, Le_2, Le_3, Le_4, Le_5, Le_6]
+  'lumbarBT[<-]': [Lbt_1, Lbt_2, Lbt_3, Lbt_4, Lbt_5, Lbt_6]
+  'lumbarBT[->]': [Lbt_1c, Lbt_2c, Lbt_3c, Lbt_4c, Lbt_5c, Lbt_6c]
+
+select_activation:
+  _target_: torch.nn.Hardtanh
+  _partial_: true
+  min_val: 0.0
+  max_val: 1.0
+# Bound positions and stiffnesses to the [0, 1] action range.
+synergy_activation:
+  _target_: torch.nn.Hardtanh
+  _partial_: true
+  min_val: 0.0
+  max_val: 1.0
+
+select_weight_id_override: ??? # Turn off intersegmental connections here.
+
+# ==================================================================================================
+# 3. Specify initialization and weight constraints.
+
+on_initialize_select: ???
+
+on_initialize_synergy:
+  _target_: utils.torch.block.block_initializer
+  weight_init:
+    # Each synergy weight is a single column, so its input index is always 0.
+    # Signs match `flxext.yaml` with flx -> negative position and ext -> positive position.
+    # flx: flex elbow, X[wrist].
+    pos_F_flx_1: [[0, elbow_L, -0.01], sign]
+    # flx2: flex shoulder, X[extend elbow].
+    pos_F_flx_2: [[0, shoulder_L_extend, -0.01], sign]
+    # ext: extend shoulder, elbow.
+    pos_F_ext_1: [[0, [shoulder_L_extend, elbow_L], +0.01], sign]
+    # ext2: extend shoulder, elbow; flex wrist.
+    pos_F_ext_2: [[0, [shoulder_L_extend, elbow_L], +0.01], [0, wrist_L, -0.01], sign]
+    # ext3: extend shoulder, elbow; flex wrist.
+    pos_F_ext_3: [[0, [shoulder_L_extend, elbow_L], +0.01], [0, wrist_L, -0.01], sign]
+
+    # flx: flex knee; X[extend ankle].
+    pos_H_flx_1: [[0, [knee_L, ankle_L], -0.01], sign]
+    # flx2: flex hip; X[extend knee].
+    pos_H_flx_2: [[0, hip_L_extend, -0.01], sign]
+    # ext: extend hip, X[knee].
+    pos_H_ext_1: [[0, [hip_L_extend], +0.01], sign]
+    # ext2: extend hip, knee, ankle; flex toe.
+    pos_H_ext_2: [[0, [hip_L_extend, knee_L, ankle_L], +0.01], [0, toe_L, -0.01], sign]
+    # ext3: extend hip, knee, ankle; flex toe.
+    pos_H_ext_3: [[0, [hip_L_extend, knee_L, ankle_L], +0.01], [0, toe_L, -0.01], sign]
+    'pos_Le_*': [sign]
+    'pos_Lbt_*': [sign]
+    # kp_* weights are intentionally left unconstrained (no `sign`, no `positive`): a
+    # weight's sign only says whether that synergy pushes stiffness up or down, not the sign of the
+    # total output (several synergies and the final activation combine to determine that) -- and
+    # it's biologically plausible for an active synergy to loosen a joint rather than stiffen it
+    # (e.g. a swing-phase synergy that should stay compliant), so nothing here should force every
+    # synergy to stiffen.
+  bias_init:
+    # Constrain all tonic position biases to default pose.
+    pos_F:
+      - [
+          [scapula_L_supinate, scapula_L_abduct, scapula_L_extend, shoulder_L_supinate,
+           shoulder_L_extend, elbow_L, wrist_L, finger_L],
+          {
+            _target_: envs.bodies.rat_actuators_pos_mid_01,
+            segment: limbFL,
+          },
+          freeze,
+        ]
+    pos_H:
+      - [
+          [hip_L_supinate, hip_L_abduct, hip_L_extend, knee_L, ankle_L, toe_L],
+          {
+            _target_: envs.bodies.rat_actuators_pos_mid_01,
+            segment: limbHL,
+          },
+          freeze,
+        ]
+    pos_Le:
+      - [
+          [lumbar_extend],
+          {
+            _target_: envs.bodies.rat_actuators_pos_mid_01,
+            segment: lumbarE,
+          },
+          freeze
+        ]
+    pos_Lbt:
+      - [
+          [lumbar_bend, lumbar_twist],
+          {
+            _target_: envs.bodies.rat_actuators_pos_mid_01,
+            segment: lumbarBT,
+          },
+          freeze
+        ]
+    # Initialize all tonic stiffness biases to 1. kp is a gain, so a nonzero resting value here
+    # (including on kp_Lbt) adds no left-right asymmetry.
+    kp_F:
+      - [[0, 1, 2, 3, 4, 5, 6, 7], 1.0]
+    kp_H:
+      - [[0, 1, 2, 3, 4, 5], 1.0]
+    kp_Le:
+      - [0, 1.0]
+    kp_Lbt:
+      - [[0, 1], 1.0]
+  initializers:
+    none:
+      _target_: models.constrain
+      _partial_: true
+    sign:
+      _target_: models.constrain
+      _partial_: true
+      sign: true
+    freeze:
+      _target_: models.constrain
+      _partial_: true
+      freeze: true

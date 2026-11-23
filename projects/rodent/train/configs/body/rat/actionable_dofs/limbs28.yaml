@@ -1,0 +1,34 @@
+# @package body.actionable_dofs
+# Limb DOFs only (no lumbar). Pair with `body/rat/lumbar: fixed` to hold the lumbar stiff.
+limbFL:
+  - scapula_L_supinate
+  - scapula_L_abduct
+  - scapula_L_extend
+  - shoulder_L_supinate
+  - shoulder_L_extend
+  - elbow_L
+  - wrist_L
+  - finger_L
+limbFR:
+  - scapula_R_supinate
+  - scapula_R_abduct
+  - scapula_R_extend
+  - shoulder_R_supinate
+  - shoulder_R_extend
+  - elbow_R
+  - wrist_R
+  - finger_R
+limbHL:
+  - hip_L_supinate
+  - hip_L_abduct
+  - hip_L_extend
+  - knee_L
+  - ankle_L
+  - toe_L
+limbHR:
+  - hip_R_supinate
+  - hip_R_abduct
+  - hip_R_extend
+  - knee_R
+  - ankle_R
+  - toe_R

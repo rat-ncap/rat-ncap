@@ -1,0 +1,86 @@
+# @package _global_
+# Rat locomotion task and evolution trainer.
+defaults:
+  - /infra/base
+  - /task: fixed_ts
+  - /arena: floor
+  - /algorithm: ars
+
+  - /body/rat: rat
+  - /body/rat/actionable_dofs: limbs28_lumbar3
+  - _self_
+
+hydra:
+  job:
+    env_set:
+      XLA_PYTHON_CLIENT_PREALLOCATE: 'false'
+
+backend: warp
+
+algorithm:
+  population_size: 1024
+  top_best: 256
+  gradient_scale: 1.5
+
+# Task hyperparameters.
+task:
+  body: ${body}
+  arena: ${arena}
+  env_timestep: 0.03
+  sim_timestep: 0.001
+
+# Objective hyperparameters.
+seed: 0
+train_rollout_steps: 100
+test_rollout_steps: 200
+train_subtasks: [0, 1, 2, 3, 4, 5]
+test_subtasks: [0, 1, 2, 3, 4, 5]
+
+# Subtasks: target velocities and the per-subtask weights of the reward terms.
+subtasks:
+  target_vx:        [0.0, 0.2, 0.4, 0.6, 0.8, 1.0]
+  reward_passive:   [0.0, 0.2, 0.2, 0.2, 0.2, 0.2]
+  reward_vx_sparse: [0.0, 0.2, 0.2, 0.2, 0.2, 0.2]
+  reward_vx_dense:  [0.0, 0.6, 0.6, 0.6, 0.6, 0.6]
+  reward_pose:      [1.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+
+objective:
+  _target_: mjx_objective.MjxEnvObjective
+  _recursive_: false
+  train_env_config:
+    _target_: composer.MjxEnv
+    task: ${task}
+    backend: ${backend}
+    truncate: ${test_rollout_steps}
+  test_env_config:
+    _target_: composer.MjxEnv
+    task: ${task}
+    backend: ${backend}
+    truncate: ${test_rollout_steps}
+  agent_config: ${agent}
+  train_timeouts: ${train_rollout_steps}
+  test_timeouts: ${test_rollout_steps}
+  subtasks: ${subtasks}
+  train_subtasks: ${train_subtasks}
+  test_subtasks: ${test_subtasks}
+  checkpoint_freq: 500
+
+trainer:
+  _target_: evolution2.Trainer
+  seed: ${seed}
+  epochs: 4000
+  save_freq: 10
+  test_freq: 10
+
+output_dir: ${hydra:runtime.output_dir}
+
+agent:
+  _target_: tonic.torch.agents.ES
+  model: ${model}
+  rollout_steps: ${train_rollout_steps}
+
+compute:
+  cpu: 4
+  gpu: 1
+  mem: 16
+  time: 2160  # 36 h

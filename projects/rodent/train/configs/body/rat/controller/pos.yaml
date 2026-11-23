@@ -1,0 +1,55 @@
+# @package body.controller
+limbFL:
+  _target_: composer.transforms.ProportionalDerivativeController
+  actionable_pos: actuators_pos_limbFL
+  kp: [0.5, 0.5, 0.5, 0.3, 0.3, 0.2, 0.15, 0.03]
+  pos_margin: 0.2
+  obskey_pos: proprio_pos_limbFL
+  obskey_vel: proprio_vel_limbFL
+  actkey_trq: actuators_trq_limbFL
+  undamped: true
+limbFR:
+  _target_: composer.transforms.ProportionalDerivativeController
+  actionable_pos: actuators_pos_limbFR
+  kp: [0.5, 0.5, 0.5, 0.3, 0.3, 0.2, 0.15, 0.03]
+  pos_margin: 0.2
+  obskey_pos: proprio_pos_limbFR
+  obskey_vel: proprio_vel_limbFR
+  actkey_trq: actuators_trq_limbFR
+  undamped: true
+limbHL:
+  _target_: composer.transforms.ProportionalDerivativeController
+  actionable_pos: actuators_pos_limbHL
+  kp: [0.4, 0.4, 0.6, 0.4, 0.2, 0.03]
+  pos_margin: 0.2
+  obskey_pos: proprio_pos_limbHL
+  obskey_vel: proprio_vel_limbHL
+  actkey_trq: actuators_trq_limbHL
+  undamped: true
+limbHR:
+  _target_: composer.transforms.ProportionalDerivativeController
+  actionable_pos: actuators_pos_limbHR
+  kp: [0.4, 0.4, 0.6, 0.4, 0.2, 0.03]
+  pos_margin: 0.2
+  obskey_pos: proprio_pos_limbHR
+  obskey_vel: proprio_vel_limbHR
+  actkey_trq: actuators_trq_limbHR
+  undamped: true
+lumbarE:
+  _target_: composer.transforms.ProportionalDerivativeController
+  actionable_pos: actuators_pos_lumbarE
+  kp: [0.1]
+  pos_margin: 0.2
+  obskey_pos: proprio_pos_lumbarE
+  obskey_vel: proprio_vel_lumbarE
+  actkey_trq: actuators_trq_lumbarE
+  undamped: true
+lumbarBT:
+  _target_: composer.transforms.ProportionalDerivativeController
+  actionable_pos: actuators_pos_lumbarBT
+  kp: [0.1, 0.1]
+  pos_margin: 0.2
+  obskey_pos: proprio_pos_lumbarBT
+  obskey_vel: proprio_vel_lumbarBT
+  actkey_trq: actuators_trq_lumbarBT
+  undamped: true

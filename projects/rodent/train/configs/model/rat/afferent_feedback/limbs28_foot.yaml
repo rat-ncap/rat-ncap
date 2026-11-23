@@ -1,0 +1,71 @@
+# @package model.afferent_feedback
+# limbs28_lumbar3_foot without the lumbar segments, for the limbs28 body.
+_target_: models.AfferentFeedbackNetwork
+# ==================================================================================================
+# 1. Specify limbs, observations, and actions.
+
+observation_prefixes:
+  limbFL: [body/proprio_pos, body/proprio_vel, body/proprio_trq, body/tactile]
+  limbFR: ${.limbFL}
+  limbHL: ${.limbFL}
+  limbHR: ${.limbFL}
+action_segments: [limbFL, limbFR, limbHL, limbHR]
+
+# Specify structural relations between segments.
+lateral_segments:
+  F: [limbFL, limbFR]
+  H: [limbHL, limbHR]
+
+action_prefixes: ['flx', 'ext']  # e.g. flx_FL, ext_FL
+observation_prefix_shorthand:
+  body/proprio_pos: pos
+  body/proprio_vel: vel
+  body/proprio_trq: trq
+  body/tactile: tac
+
+# ==================================================================================================
+# 2. Specify AF architecture.
+
+reset: true
+
+reset_weight_id_override: ???  # Turn off intersegmental connections here.
+
+# Effectively the ObservationRectifier scalar weights/biases, but with shared weights.
+sensor_activation:
+  _target_: torch.nn.Hardtanh
+  _partial_: true
+  min_val: 0.0
+  max_val: 1.0
+reset_activation:
+  _target_: torch.nn.Hardtanh
+  _partial_: true
+  min_val: -1.0
+  max_val: 1.0
+
+# ==================================================================================================
+# 3. Specify initialization and weight constraints.
+
+on_initialize_sensor:
+  _target_: utils.torch.block.block_initializer
+  weight_init:
+    '*': []
+  bias_init:
+    '*': [negative]
+  # Initializer registry referenced by name.
+  initializers:
+    negative:
+      _target_: models.constrain
+      _partial_: true
+      max: 0.0
+
+on_initialize_reset:
+  _target_: utils.torch.block.block_initializer
+  weight_init: {}
+  bias_init:
+    # Disallow tonic reset activation.
+    '*': [negative]
+  initializers:
+    negative:
+      _target_: models.constrain
+      _partial_: true
+      max: 0.0

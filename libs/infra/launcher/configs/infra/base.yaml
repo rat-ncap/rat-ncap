@@ -1,0 +1,59 @@
+# @package _global_
+# Any Hydra entrypoint should extend this config from its root base experiment by adding
+# "/infra/base" near the top of its defaults list. This config defines conventions for naming runs,
+# storing outputs in hierarchical directory structures, and handling logging. It also sets up the
+# compute infrastructure built on Submitit for launching jobs locally ("/compute: local").
+
+defaults:
+  - /compute: local
+  - _self_
+
+# The experiment name in hierarchical format (e.g. "project_name/1_experiment/2_variant"). It can
+# have arbitrary levels of nesting and creates the experiment subtree for run and job outputs. It
+# should NOT have starting or trailing slashes. If omitted, it defaults to the config name.
+name: null
+
+# The run tag is an optional string used in the run directory name. It should contain only
+# filesystem-safe characters (no spaces or equal signs; e.g. "foo-bar-1").
+tag: null
+
+# Setup output directory structure.
+hydra:
+
+  # All jobs use MULTIRUN mode for a consistent directory structure, even for jobs that do not
+  # perform sweeps.
+  mode: MULTIRUN
+
+  job:
+    name: ${exp_id:${name},${hydra.job.config_name}}
+    chdir: false
+    config:
+      override_dirname:
+        # These keys will not appear in the overrides directory name.
+        exclude_keys:
+          - name
+          - tag
+          - compute
+          - compute.cpu
+          - compute.gpu
+          - compute.mem
+          - compute.time
+
+  sweep:
+    # The run directory name uses: the experiment name for the ancestor directory structure, and a
+    # timestamp and human-readable unique ID for the directory name.
+    dir: ${oc.env:OUTPUT_ROOT}/${exp_id:${name},${hydra.job.config_name}}/${sweep_id:${now:%Y-%m%d-%H%M%S},${hruid:},${tag}}
+
+    # The job subdirectory uses: the job scheduler ID and an abbreviated overrides list for the
+    # subdirectory name.
+    subdir: ${hydra.job.id}:${overrides:${hydra.job.override_dirname}}
+
+  callbacks:
+    log_job_return:
+      _target_: hydra.experimental.callbacks.LogJobReturnCallback
+
+  # Paths where Hydra should search for additional config sources, similar to `PYTHONPATH`.
+  # Set this only when the entrypoint's local config tree and registered plugins are insufficient.
+  # See https://hydra.cc/docs/advanced/search_path/.
+  # searchpath:
+  #   - file://${oc.env:REPO_ROOT}/path/to/additional/configs

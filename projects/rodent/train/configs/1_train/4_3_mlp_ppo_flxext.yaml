@@ -1,0 +1,48 @@
+# @package _global_
+# MLP + PPO flexor-extensor interface.
+hydra:
+  sweeper:
+    params:
+      seed: 1
+
+defaults:
+  - /1_train/0_base_ppo
+  - /body/rat/controller: flxext
+  - _self_
+
+model:
+  _target_: tonic.torch.models.ActorCritic
+  actor:
+    _target_: tonic.torch.models.Actor
+    encoder:
+      _target_: tonic.torch.models.ObservationEncoder
+    torso:
+      _target_: tonic.torch.models.MLP
+      sizes: [256, 256]
+      activation:
+        _target_: torch.nn.ReLU
+        _partial_: true
+    head:
+      _target_: tonic.torch.models.StochasticDetachedStdPolicyHead
+      mean_activation:
+        _target_: torch.nn.Hardtanh
+        _partial_: true
+        min_val: 0.0
+        max_val: 1.0
+      mean_init_fn: null
+      std_log_init: 0.0
+      std_min: 0.0001
+  critic:
+    _target_: tonic.torch.models.Critic
+    encoder:
+      _target_: tonic.torch.models.ObservationEncoder
+    torso:
+      _target_: tonic.torch.models.MLP
+      sizes: [256, 256]
+      activation:
+        _target_: torch.nn.Tanh
+        _partial_: true
+    head:
+      _target_: tonic.torch.models.ValueHead
+  observation_normalizer:
+    _target_: tonic.torch.models.MeanStdNormalizer

@@ -1,0 +1,10 @@
+# @package body
+# Holds the (non-actionable) lumbar stiff with the high passive stiffness of the cervical joints
+# (kp 4, vs 0.2/0.1 by default), and removes the lumbar muscle controllers. Use with
+# `body/rat/actionable_dofs: limbs28` after `body/rat/controller` in the defaults list.
+passive_kp:
+  lumbarE: [4]
+  lumbarBT: [4, 4]
+controller:
+  lumbarE: null
+  lumbarBT: null

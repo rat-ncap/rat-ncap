@@ -1,0 +1,15 @@
+# @package _global_
+# 2_2_ablation_v0v_v0d with the V3f and V3a interneurons ablated instead (the crossed flexor
+# synchronizers cross_v3f of all four limbs and the ascending diagonal synchronizers diaga_v3a), V0
+# intact.
+hydra:
+  sweeper:
+    params:
+      rollout_kwargs.policy.neurons: >-
+        [cross_v3f_FL,cross_v3f_FR,cross_v3f_HL,cross_v3f_HR,diaga_v3a_HL,diaga_v3a_HR]
+  sweep:
+    subdir: ${hydra.job.id}:v3f_v3a
+
+defaults:
+  - /2_test/2_2_ablation_v0v_v0d
+  - _self_

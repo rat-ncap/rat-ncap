@@ -1,0 +1,12 @@
+# @package _global_
+# Rat NCAP flexor-extensor interface DOF ablation: nonplanar limb joints.
+hydra:
+  sweeper:
+    params:
+      seed: 1
+
+defaults:
+  - /1_train/1_4_flxext
+  - /body/rat/limbs: planar
+  - override /body/rat/actionable_dofs: limbs18_planar_lumbar3
+  - _self_

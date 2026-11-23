@@ -1,0 +1,27 @@
+# @package _global_
+# Gaits, step cycles, kinematics, torques and ground reaction forces: the four interface runs at the
+# 6 constant commands of the training tests, 15 s each, with the full records.
+hydra:
+  sweeper:
+    params:
+      body/rat/controller: trq, pos, poskp, flxext
+
+defaults:
+  - /2_test/0_base
+  - /2_test/record/full
+  - _self_
+
+# The checkpoint of each interface.
+interface_checkpoints: {trq: 1_1_trq, pos: 1_2_pos, poskp: 1_3_poskp, flxext: 1_4_flxext}
+checkpoint_config: ${interface_checkpoints.${hydra:runtime.choices.body/rat/controller}}
+
+# Only the torque interface exposes joint torques to the model.
+actionable_trq: {trq: true, pos: false, poskp: false, flxext: false}
+body:
+  actionable_trq: ${actionable_trq.${hydra:runtime.choices.body/rat/controller}}
+
+population: 10
+
+# The subtasks are the base's: all 6 commands of the training tests.
+rollout_kwargs:
+  duration: 15.0

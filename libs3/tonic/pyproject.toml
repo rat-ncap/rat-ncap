@@ -1,0 +1,27 @@
+[project]
+name = "tonic"
+version = "0.3.0"
+description = "Tonic RL Library"
+license = "MIT"
+authors = [
+  { name = "Fabio Pardo", email = "f.pardo@imperial.ac.uk" }
+]
+keywords = ["tonic", "deep learning", "reinforcement learning"]
+
+requires-python = ">=3.12"
+dependencies = [
+  "gymnasium",
+  "matplotlib",
+  "numpy",
+  "pandas",
+  "pyyaml",
+  "termcolor",
+  "hydra-core",
+]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["tonic*"]

@@ -1,0 +1,38 @@
+# @package _global_
+# Locomotion at trot speed with each specimen's rhythm generation weights perturbed by
+# multiplicative Gaussian noise of scale `sigma` (0-0.5 in steps of 0.025), for gait classification
+# against noise magnitude.
+hydra:
+  sweeper:
+    params:
+      rollout_kwargs.policy.sigma: >-
+        0.0, 0.025, 0.05, 0.075, 0.1, 0.125, 0.15, 0.175, 0.2, 0.225, 0.25,
+        0.275, 0.3, 0.325, 0.35, 0.375, 0.4, 0.425, 0.45, 0.475, 0.5
+
+defaults:
+  - /2_test/0_base
+  - /2_test/record/rg_tactile
+  - _self_
+
+population: 50
+
+# Trot speed (0.4 m/s).
+subtasks:
+  target_vx:        [0.4]
+  reward_passive:   [0.2]
+  reward_vx_sparse: [0.2]
+  reward_vx_dense:  [0.6]
+  reward_pose:      [0.0]
+
+rollout_kwargs:
+  duration: 15.0
+  policy:
+    _target_: policy.PerturbedPolicy
+    mode: multiplicative
+    sigma: 0.1
+    include: ['sim.*']  # Only rhythm generation parameters live under `sim`.
+    exclude: ['*.bias_*']
+    constrain_sign: true
+
+compute:
+  time: 30

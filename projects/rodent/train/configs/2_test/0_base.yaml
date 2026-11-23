@@ -1,0 +1,78 @@
+# @package _global_
+# Base of the tests (`test.py`).
+hydra:
+  sweeper:
+    params:
+      checkpoint_seed: 1, 2, 3
+
+defaults:
+  - /infra/base
+  - /task: fixed_ts
+  - /arena: floor
+
+  - /body/rat: rat
+  - /body/rat/actionable_dofs: limbs28_lumbar3
+  - /body/rat/controller: flxext
+  - _self_
+
+# The tested checkpoint: `checkpoints/<checkpoint_config>/seed<checkpoint_seed>` (relative to the
+# repository root), at `checkpoint_epoch` ('last': the last provided epoch).
+checkpoint_config: 1_4_flxext
+checkpoint_seed: 1
+checkpoint_epoch: last
+
+# Test hyperparameters.
+# Base seed of the rollouts: the checkpoint's training seed, so that each trained instance gets its
+# own noise. Sweeps over a test's settings (e.g. ablation strength) share it, so their comparisons
+# stay paired.
+seed: ${checkpoint_seed}
+population: 1  # Number of specimens (copies of the tested checkpoint).
+rollouts: 1
+
+# Task hyperparameters.
+task:
+  body: ${body}
+  arena: ${arena}
+  env_timestep: 0.03
+  sim_timestep: 0.001
+
+env:
+  _target_: composer.MjxEnv
+  task: ${task}
+  backend: warp
+
+subtasks:
+  target_vx:        [0.0, 0.2, 0.4, 0.6, 0.8, 1.0]
+  # Per-subtask reward component weights.
+  reward_passive:   [0.0, 0.2, 0.2, 0.2, 0.2, 0.2]
+  reward_vx_sparse: [0.0, 0.2, 0.2, 0.2, 0.2, 0.2]
+  reward_vx_dense:  [0.0, 0.6, 0.6, 0.6, 0.6, 0.6]
+  reward_pose:      [1.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+
+rollout_kwargs:
+  duration: 10.0
+  record:
+    terminated:
+      _target_: policy.record_terminated
+      _partial_: true
+    speed:
+      _target_: policy.record_speed
+      _partial_: true
+    target_vx:
+      _target_: policy.record_observation
+      _partial_: true
+      key: target_vx
+  policy:
+    _target_: policy.EnsembledPolicy
+    population: ${population}
+    checkpoint: checkpoints/${checkpoint_config}/seed${checkpoint_seed}
+    epoch: ${checkpoint_epoch}
+    seed: ${seed}
+
+output_dir: ${hydra:runtime.output_dir}
+
+compute:
+  cpu: 4
+  gpu: 1
+  mem: 16
+  time: 60

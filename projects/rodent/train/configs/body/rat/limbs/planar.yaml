@@ -1,0 +1,13 @@
+# @package body
+# Holds the limbs' out-of-plane DOFs (not actionable with `body/rat/actionable_dofs:
+# limbs18_planar_lumbar3`) stiff at the body's mid pose (`RAT_ACTUATORS_POS_MID`: scapula supinate
+# 4.5, abduct 0, shoulder supinate -16.25, hip supinate -1.5, abduct 12.75 deg) with the passive
+# stiffness of the fixed lumbar and the cervical joints (kp 4); the damping stays at the body
+# default, as `body/rat/lumbar: fixed`. For the planar limb DOF ablation. Fore: [scapula_supinate,
+# scapula_abduct, scapula_extend, shoulder_supinate, shoulder_extend, elbow, wrist, finger]. Hind:
+# [hip_supinate, hip_abduct, hip_extend, knee, ankle, toe].
+passive_kp:
+  limbFL: [4, 4, 0, 4, 0, 0, 0, 0]
+  limbFR: [4, 4, 0, 4, 0, 0, 0, 0]
+  limbHL: [4, 4, 0, 0, 0, 0]
+  limbHR: [4, 4, 0, 0, 0, 0]

@@ -1,0 +1,48 @@
+# @package _global_
+# Rat locomotion task and PPO trainer.
+defaults:
+  - /1_train/0_base_es
+  - _self_
+
+train_size: 6144  # Parallel environments for training (multiple of the subtask count).
+test_size: 60  # Parallel environments for testing (multiple of the subtask count).
+minibatch_samples: 4096
+train_subtasks: ${subtasks}
+test_subtasks: ${subtasks}
+
+agent:
+  _target_: models.ppo_stability.RestartPPO
+  discount_factor: 0.97
+  trace_decay: 0.95
+  rollout_steps: 40
+  minibatch_samples: ${minibatch_samples}
+  minibatch_iterations: 4
+  actor_updater:
+    _target_: models.ppo_stability.DiagnosedClippedRatio
+    kl_threshold: 0.05
+    rollback: true
+
+train_env:
+  _target_: composer.MjxEnv
+  task: ${task}
+  truncate: ${test_rollout_steps}
+  backend: warp
+
+test_env:
+  _target_: composer.MjxEnv
+  task: ${task}
+  truncate: ${test_rollout_steps}
+  backend: warp
+
+trainer:
+  _target_: tonic.Trainer
+  seed: ${seed}
+  epochs: 10000
+  epoch_steps: 40
+  save_freq: 10
+  test_freq: 10
+
+compute:
+  cpu: 1
+  gpu: 1
+  mem: 24

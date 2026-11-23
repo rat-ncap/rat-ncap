@@ -1,0 +1,111 @@
+_target_: tonic.torch.agents.ES
+model:
+  _target_: models.quadruped_es
+  pattern_formation:
+    _target_: models.QuadrupedPatternFormationNetwork
+    repeat: 8
+    bias: true
+    action_prefixes:
+    - body/actuators_pos
+    bias_init:
+      F:
+        _target_: envs.bodies.rat_actuators_pos_mid_01
+        segment: limbFL
+      H:
+        _target_: envs.bodies.rat_actuators_pos_mid_01
+        segment: limbHL
+    activation:
+      _target_: torch.nn.Hardtanh
+      _partial_: true
+      min_val: 0.0
+      max_val: 1.0
+    constrain:
+      _target_: models.constrain_sign
+      _partial_: true
+      magnitude: false
+      zero: false
+    flx:
+      F:
+        body/actuators_pos:
+        - 0
+        - 0
+        - 0
+        - 0
+        - -0.01
+        - -0.01
+        - 0.01
+        - 0
+      H:
+        body/actuators_pos:
+        - 0
+        - 0
+        - -0.01
+        - -0.01
+        - -0.01
+        - 0.01
+    ext:
+      F:
+        body/actuators_pos:
+        - 0
+        - 0
+        - 0
+        - 0
+        - 0.01
+        - 0.01
+        - -0.01
+        - 0
+      H:
+        body/actuators_pos:
+        - 0
+        - 0
+        - 0.01
+        - 0.01
+        - 0.01
+        - -0.01
+  rhythm_generation:
+    _target_: models.QuadrupedRhythmGenerationCircuit
+    init:
+      _target_: models.init_rg_quadruped
+      _partial_: true
+      grad: false
+  afferent_feedback:
+    _target_: models.QuadrupedAfferentFeedbackNetwork
+    observation_prefixes:
+    - body/tactile
+    repeat: 8
+    repeat_agg: sum
+    constrain:
+      _target_: models.constrain_sign
+      _partial_: true
+      magnitude: false
+      zero: false
+    flx:
+      F:
+      - 0
+      - 0
+      - -1
+      - -1
+      H:
+      - 0
+      - 0
+      - -1
+      - -1
+    ext:
+      F:
+      - 0
+      - 0
+      - 1
+      - 1
+      H:
+      - 0
+      - 0
+      - 1
+      - 1
+  brainstem_command:
+    _target_: models.QuadrupedBrainstemCommand
+    observation_key: target_vx
+    weight: 1.0
+    bias: 0.0
+  constrainer:
+    _target_: models.Constrainer
+rollout_steps: 100

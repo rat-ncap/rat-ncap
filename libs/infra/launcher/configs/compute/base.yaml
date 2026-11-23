@@ -1,0 +1,9 @@
+# @package compute
+# Number of cpus per job in sweep (e.g. 1).
+cpu: 1
+# Number of gpus per job in sweep (e.g. 1).
+gpu: 0
+# Memory (in GB) per job in sweep.
+mem: 16
+# Time allotted (in minutes > 0) per job in sweep.
+time: 60

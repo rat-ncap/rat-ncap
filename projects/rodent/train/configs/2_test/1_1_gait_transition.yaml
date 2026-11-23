@@ -1,0 +1,37 @@
+# @package _global_
+# Gait transitions under a stepped brainstem command (walk, trot, bound, with brief stops between).
+defaults:
+  - /2_test/0_base
+  - /2_test/record/rg_tactile
+  - _self_
+
+population: 10
+
+# The policy sees the stepped `target_vx` from `ScheduledObservation`; the subtask only sets the
+# rewards.
+subtasks:
+  target_vx:        [0.2]
+  reward_passive:   [0.2]
+  reward_vx_sparse: [0.2]
+  reward_vx_dense:  [0.6]
+  reward_pose:      [0.0]
+
+# (start time [s], target_vx) pairs.
+target_vx_schedule: [[0.0, 0.2], [3.2, 0.0], [3.5, 0.4], [7.3, 0.0], [7.5, 1.0]]
+
+rollout_kwargs:
+  duration: 10.0
+  on_reset:
+    _target_: policy.ScheduledObservation
+    key: target_vx
+    schedule: ${target_vx_schedule}
+  on_step:
+    _target_: policy.ScheduledObservation
+    key: target_vx
+    schedule: ${target_vx_schedule}
+  record:
+    foot_touch: {_target_: policy.record_body, _partial_: true, getter: get_tactile_foot}
+    root_pos: {_target_: policy.record_body, _partial_: true, getter: get_root_global_pos}
+
+compute:
+  time: 30

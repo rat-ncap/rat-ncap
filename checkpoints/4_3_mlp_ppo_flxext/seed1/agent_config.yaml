@@ -1,0 +1,50 @@
+_target_: models.ppo_stability.RestartPPO
+model:
+  _target_: tonic.torch.models.ActorCritic
+  actor:
+    _target_: tonic.torch.models.Actor
+    encoder:
+      _target_: tonic.torch.models.ObservationEncoder
+    torso:
+      _target_: tonic.torch.models.MLP
+      sizes:
+      - 256
+      - 256
+      activation:
+        _target_: torch.nn.ReLU
+        _partial_: true
+    head:
+      _target_: tonic.torch.models.StochasticDetachedStdPolicyHead
+      mean_activation:
+        _target_: torch.nn.Hardtanh
+        _partial_: true
+        min_val: 0.0
+        max_val: 1.0
+      mean_init_fn: null
+      std_log_init: 0.0
+      std_min: 0.0001
+  critic:
+    _target_: tonic.torch.models.Critic
+    encoder:
+      _target_: tonic.torch.models.ObservationEncoder
+    torso:
+      _target_: tonic.torch.models.MLP
+      sizes:
+      - 256
+      - 256
+      activation:
+        _target_: torch.nn.Tanh
+        _partial_: true
+    head:
+      _target_: tonic.torch.models.ValueHead
+  observation_normalizer:
+    _target_: tonic.torch.models.MeanStdNormalizer
+rollout_steps: 40
+discount_factor: 0.97
+trace_decay: 0.95
+minibatch_samples: 4096
+minibatch_iterations: 4
+actor_updater:
+  _target_: models.ppo_stability.DiagnosedClippedRatio
+  kl_threshold: 0.05
+  rollback: true

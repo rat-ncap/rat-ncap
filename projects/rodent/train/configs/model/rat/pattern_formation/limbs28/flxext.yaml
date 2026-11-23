@@ -1,0 +1,165 @@
+# @package model.pattern_formation
+# limbs28_lumbar3/flxext without the lumbar segments, for the limbs28 body (lumbar not actionable,
+# see body/rat/lumbar/fixed) using the flx_ext controller: 5 unique synergies per limb group (flx_1,
+# flx_2, ext_1, ext_2, ext_3), flx_1, flx_2, ext_1 and ext_2 each activated through 3 select routes
+# and ext_3 through 1 (13 routes per limb). Routes of the same synergy share its muscle weights but
+# have their own select weights and biases. Use with on_initialize_select: limbs28/init_rg.
+# Constrains the flx/ext action biases to be the same so that there is no resting differential
+# muscle activation.
+_target_: models.SynergyPatternFormationNetwork
+# ==================================================================================================
+# 1. Specify limbs, observations, and actions.
+
+# Specify the observation prefixes of each body segment, and the body segments to which actions are
+# applied. The `bc` segment holds brainstem commands.
+observation_prefixes:
+  bc: [speed]
+  limbFL: [rg, body/proprio_pos, body/proprio_vel, body/proprio_trq, body/tactile]
+  limbFR: ${.limbFL}
+  limbHL: ${.limbFL}
+  limbHR: ${.limbFL}
+action_prefixes: [body/muscle_flx, body/muscle_ext]
+action_segments: [limbFL, limbFR, limbHL, limbHR]
+
+# Specify structural relations between segments.
+lateral_segments:
+  F: [limbFL, limbFR]
+  H: [limbHL, limbHR]
+sagittal_segments:
+  BCs: bc
+transverse_segments: {}
+
+# Map action segments from synergy activations (based on observation segments).
+action_synergies:
+  limbFL: [limbFL]
+  limbFR: [limbFR]
+  limbHL: [limbHL]
+  limbHR: [limbHR]
+
+observation_prefix_shorthand:
+  rg: rg
+  body/proprio_pos: pos
+  body/proprio_vel: vel
+  body/proprio_trq: trq
+  body/tactile: tac
+  speed: speed
+action_prefix_shorthand: {body/muscle_flx: flx, body/muscle_ext: ext}
+# Force the flx and ext action biases of each joint to be the same, so that there is no resting
+# differential activation.
+action_prefix_symmetry_mapping: {body/muscle_flx: act, body/muscle_ext: act}
+
+# ==================================================================================================
+# 2. Specify PF architecture.
+
+# Each synergy names its synergy layer weight ID (a column over the segment's muscles) per action
+# prefix. Synergies are listed per synergy segment below; lateral pairs list the same synergies.
+# Each limb group has 5 unique synergies; see segment_synergies for their select routes.
+synergies:
+  F_flx_1: {body/muscle_flx: F_flx_1_flx, body/muscle_ext: F_flx_1_ext}
+  F_flx_2: {body/muscle_flx: F_flx_2_flx, body/muscle_ext: F_flx_2_ext}
+  F_ext_1: {body/muscle_flx: F_ext_1_flx, body/muscle_ext: F_ext_1_ext}
+  F_ext_2: {body/muscle_flx: F_ext_2_flx, body/muscle_ext: F_ext_2_ext}
+  F_ext_3: {body/muscle_flx: F_ext_3_flx, body/muscle_ext: F_ext_3_ext}
+
+  H_flx_1: {body/muscle_flx: H_flx_1_flx, body/muscle_ext: H_flx_1_ext}
+  H_flx_2: {body/muscle_flx: H_flx_2_flx, body/muscle_ext: H_flx_2_ext}
+  H_ext_1: {body/muscle_flx: H_ext_1_flx, body/muscle_ext: H_ext_1_ext}
+  H_ext_2: {body/muscle_flx: H_ext_2_flx, body/muscle_ext: H_ext_2_ext}
+  H_ext_3: {body/muscle_flx: H_ext_3_flx, body/muscle_ext: H_ext_3_ext}
+
+# Synergies activated by each synergy segment.
+# Listing a synergy n times gives it n select routes (labeled name, name#1, name#2).
+# Select init indices: flx_1 [0, 1, 2], flx_2 [3, 4, 5], ext_1 [6, 7, 8], ext_2 [9, 10, 11],
+# ext_3 [12].
+segment_synergies:
+  limbFL: [
+    F_flx_1, F_flx_1, F_flx_1,
+    F_flx_2, F_flx_2, F_flx_2,
+    F_ext_1, F_ext_1, F_ext_1,
+    F_ext_2, F_ext_2, F_ext_2,
+    F_ext_3,
+  ]
+  limbFR: ${.limbFL}
+  limbHL: [
+    H_flx_1, H_flx_1, H_flx_1,
+    H_flx_2, H_flx_2, H_flx_2,
+    H_ext_1, H_ext_1, H_ext_1,
+    H_ext_2, H_ext_2, H_ext_2,
+    H_ext_3,
+  ]
+  limbHR: ${.limbHL}
+
+select_activation:
+  _target_: torch.nn.Hardtanh
+  _partial_: true
+  min_val: 0.0
+  max_val: 1.0
+# Bound muscle activations to the [0, 1] action range.
+synergy_activation:
+  _target_: torch.nn.Hardtanh
+  _partial_: true
+  min_val: 0.0
+  max_val: 1.0
+
+select_weight_id_override: ??? # Turn off intersegmental connections here.
+
+# ==================================================================================================
+# 3. Specify initialization and weight constraints.
+
+on_initialize_select: ???
+
+on_initialize_synergy:
+  _target_: utils.torch.block.block_initializer
+  weight_init:
+    # Each synergy weight is a single column, so its input index is always 0.
+    # flx: flex elbow, X[wrist].
+    F_flx_1_flx: [[0, elbow_L, +0.01], sign]
+    F_flx_1_ext: [[0, elbow_L, -0.01], sign]
+    # flx2: flex shoulder, X[extend elbow].
+    F_flx_2_flx: [[0, shoulder_L_extend, +0.01], sign]
+    F_flx_2_ext: [[0, shoulder_L_extend, -0.01], sign]
+    # ext: extend shoulder, elbow.
+    F_ext_1_flx: [[0, [shoulder_L_extend, elbow_L], -0.01], sign]
+    F_ext_1_ext: [[0, [shoulder_L_extend, elbow_L], +0.01], sign]
+    # ext2: extend shoulder, elbow; flex wrist.
+    F_ext_2_flx: [[0, [shoulder_L_extend, elbow_L], -0.01], [0, wrist_L, +0.01], sign]
+    F_ext_2_ext: [[0, [shoulder_L_extend, elbow_L], +0.01], [0, wrist_L, -0.01], sign]
+    # ext3: extend shoulder, elbow; flex wrist.
+    F_ext_3_flx: [[0, [shoulder_L_extend, elbow_L], -0.01], [0, wrist_L, +0.01], sign]
+    F_ext_3_ext: [[0, [shoulder_L_extend, elbow_L], +0.01], [0, wrist_L, -0.01], sign]
+
+    # flx: flex knee; X[extend ankle].
+    H_flx_1_flx: [[0, [knee_L, ankle_L], +0.01], sign]
+    H_flx_1_ext: [[0, [knee_L, ankle_L], -0.01], sign]
+    # flx2: flex hip; X[extend knee].
+    H_flx_2_flx: [[0, hip_L_extend, +0.01], sign]
+    H_flx_2_ext: [[0, hip_L_extend, -0.01], sign]
+    # ext: extend hip, X[knee].
+    H_ext_1_flx: [[0, [hip_L_extend], -0.01], sign]
+    H_ext_1_ext: [[0, [hip_L_extend], +0.01], sign]
+    # ext2: extend hip, knee, ankle; flex toe.
+    H_ext_2_flx: [[0, [hip_L_extend, knee_L, ankle_L], -0.01], [0, toe_L, +0.01], sign]
+    H_ext_2_ext: [[0, [hip_L_extend, knee_L, ankle_L], +0.01], [0, toe_L, -0.01], sign]
+    # ext3: extend hip, knee, ankle; flex toe.
+    H_ext_3_flx: [[0, [hip_L_extend, knee_L, ankle_L], -0.01], [0, toe_L, +0.01], sign]
+    H_ext_3_ext: [[0, [hip_L_extend, knee_L, ankle_L], +0.01], [0, toe_L, -0.01], sign]
+  bias_init:
+    # Initialize all tonic synergy biases to full flx+ext coactivation.
+    # Resting coactivation is free to change, resting differential activation will always be 0.
+    act_F:
+      - [[0, 1, 2, 3, 4, 5, 6, 7], 0.8]
+    act_H:
+      - [[0, 1, 2, 3, 4, 5], 0.8]
+  initializers:
+    none:
+      _target_: models.constrain
+      _partial_: true
+    sign:
+      _target_: models.constrain
+      _partial_: true
+      sign: true
+    zero:
+      _target_: models.constrain
+      _partial_: true
+      min: 0.0
+      max: 0.0

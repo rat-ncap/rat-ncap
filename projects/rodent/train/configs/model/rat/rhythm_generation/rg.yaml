@@ -1,0 +1,9 @@
+# @package model.rhythm_generation
+_target_: models.RhythmGenerationCircuit
+flx_delays: [0.25, 0.0, 0.2, 0.0]
+ext_oscillator: false
+init:
+  _target_: models.init_rg_rat
+  _partial_: true
+  grad: false
+  scale: 0.8

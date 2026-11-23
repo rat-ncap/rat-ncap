@@ -1,0 +1,23 @@
+# @package rollout_kwargs.record
+# Shared rollout records: each limb's tactile observation and the rhythm generator's outputs, as the
+# gait classification of the noise, ablation and transition tests needs. Include in a test's
+# defaults as `- /2_test/record/rg_tactile`; delete a record with `~rollout_kwargs.record.<key>`.
+tactile_limbFL:
+  _target_: policy.record_observation
+  _partial_: true
+  key: body/tactile_limbFL
+tactile_limbFR:
+  _target_: policy.record_observation
+  _partial_: true
+  key: body/tactile_limbFR
+tactile_limbHL:
+  _target_: policy.record_observation
+  _partial_: true
+  key: body/tactile_limbHL
+tactile_limbHR:
+  _target_: policy.record_observation
+  _partial_: true
+  key: body/tactile_limbHR
+rg:
+  _target_: policy.record_rhythm_generation
+  _partial_: true

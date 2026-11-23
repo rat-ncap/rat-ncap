@@ -1,0 +1,4 @@
+# @package algorithm
+_target_: evolution2.algos.AugmentedRandomSearchEvolutionStrategy
+population_size: 32
+mutation_scale: 0.02

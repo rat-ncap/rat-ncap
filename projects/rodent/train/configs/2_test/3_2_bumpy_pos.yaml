@@ -1,0 +1,11 @@
+# @package _global_
+# 3_1_bumpy_flxext on the position interface, with the position NCAP and MLPs.
+defaults:
+  - /2_test/3_1_bumpy_flxext
+  - override /body/rat/controller: pos
+  - _self_
+
+models:
+  ncap: 1_2_pos
+  mlp_es: 4_2_mlp_es_pos
+  mlp_ppo: 4_4_mlp_ppo_pos

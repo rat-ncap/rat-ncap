@@ -1,0 +1,33 @@
+# @package model
+# Rat model with 31 DoF (limbs28 + lumbar3).
+# BC = target_vx from subtask.
+_target_: models.ncap_es
+afferent_feedback: ???
+pattern_formation: ???
+rhythm_generation: null
+brainstem_command:
+  _target_: models.BrainstemCommandNetwork
+  commands: [speed]
+  init:
+    _target_: models.init_bc_fixed
+    _partial_: true
+    weight: 1.0
+    bias: 0.0
+    weight_grad: false
+    bias_grad: false
+  repeat: 1
+constrainer:
+  _target_: models.Constrainer
+observation_rectifier:
+  _target_: models.ObservationRectifier
+  rectification:
+    target_vx: null
+    # body/proprio_*_lumbarBT: flip
+    body/proprio_pos*: flip
+    body/proprio_vel*: flip
+    body/proprio_trq*: flip
+    body/tactile_foot*: null
+  split_key:
+    body/proprio_*_lumbarBT: true
+  weight: false
+  bias: false

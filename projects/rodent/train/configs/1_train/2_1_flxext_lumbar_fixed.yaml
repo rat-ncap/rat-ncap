@@ -1,0 +1,15 @@
+# @package _global_
+# Rat NCAP flexor-extensor interface DOF ablation: lumbar joints.
+hydra:
+  sweeper:
+    params:
+      seed: 1
+
+defaults:
+  - /1_train/1_4_flxext
+  - /body/rat/lumbar: fixed
+  - override /model/rat/pattern_formation: limbs28/flxext
+  - override /model/rat/pattern_formation/on_initialize_select: limbs28/init_rg
+  - override /model/rat/afferent_feedback: limbs28_foot
+  - override /body/rat/actionable_dofs: limbs28
+  - _self_

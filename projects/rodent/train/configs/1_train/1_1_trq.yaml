@@ -1,0 +1,22 @@
+# @package _global_
+# Rat NCAP torque interface.
+hydra:
+  sweeper:
+    params:
+      seed: 1, 2, 3
+
+defaults:
+  - /1_train/0_base_es
+  - /body/rat/controller: trq
+  - /model/rat: rat
+  - /model/rat/rhythm_generation: rg
+  - /model/rat/pattern_formation: limbs28_lumbar3/${body/rat/controller}
+  - /model/rat/pattern_formation/on_initialize_select: limbs28_lumbar3/init_rg
+  - /model/rat/pattern_formation/select_weight_id_override: local_af
+  - /model/rat/afferent_feedback: limbs28_lumbar3_foot
+  - /model/rat/afferent_feedback/reset_weight_id_override: local_af
+  - _self_
+
+# Expose joint torques directly to the model.
+body:
+  actionable_trq: true

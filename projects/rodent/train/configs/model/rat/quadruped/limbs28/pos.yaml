@@ -1,0 +1,76 @@
+# @package model
+# limbs28/flxext (everything but the PF copied from it) with position control, as the original
+# Quadruped NCAP (thigh/calf position setpoints on the Unitree A1). Use with
+# `body/rat/controller: pos`.
+# Rat position actions are joint setpoints normalized to [0, 1] over each joint's range
+# (`body.rescale_mode: limits`), so the original's tanh around a neutral setpoint of 0 becomes:
+# - Biases: initialized to the neutral pose (the joint mid-range, as the rat NCAP pos model's tonic
+#   biases), but trainable as in the original.
+# - Activation: Hardtanh to [0, 1], the action range.
+# - Weights: magnitude 0.01, as the rat NCAP synergy inits.
+#   Signs as the flxext port, with flexion as a negative position (as the rat NCAP pos model): the
+#   flx RG unit flexes shoulder_extend, elbow (fore) and hip_extend, knee, ankle (hind) and extends
+#   wrist (fore) and toe (hind); the ext RG unit does the opposite.
+# Fore: [scapula_supinate, scapula_abduct, scapula_extend, shoulder_supinate, shoulder_extend,
+#        elbow, wrist, finger]. Hind: [hip_supinate, hip_abduct, hip_extend, knee, ankle, toe].
+_target_: models.quadruped_es
+pattern_formation:
+  _target_: models.QuadrupedPatternFormationNetwork
+  repeat: 8
+  bias: true
+  action_prefixes: [body/actuators_pos]
+  bias_init:
+    F: {_target_: envs.bodies.rat_actuators_pos_mid_01, segment: limbFL}
+    H: {_target_: envs.bodies.rat_actuators_pos_mid_01, segment: limbHL}
+  activation:
+    _target_: torch.nn.Hardtanh
+    _partial_: true
+    min_val: 0.0
+    max_val: 1.0
+  constrain:
+    _target_: models.constrain_sign
+    _partial_: true
+    magnitude: false
+    zero: false
+  flx:
+    F:
+      body/actuators_pos: [0, 0, 0, 0, -0.01, -0.01, +0.01, 0]
+    H:
+      body/actuators_pos: [0, 0, -0.01, -0.01, -0.01, +0.01]
+  ext:
+    F:
+      body/actuators_pos: [0, 0, 0, 0, +0.01, +0.01, -0.01, 0]
+    H:
+      body/actuators_pos: [0, 0, +0.01, +0.01, +0.01, -0.01]
+rhythm_generation:
+  _target_: models.QuadrupedRhythmGenerationCircuit
+  init:
+    _target_: models.init_rg_quadruped
+    _partial_: true
+    grad: false
+afferent_feedback:
+  _target_: models.QuadrupedAfferentFeedbackNetwork
+  observation_prefixes: [body/tactile]
+  repeat: 8
+  repeat_agg: sum
+  constrain:
+    _target_: models.constrain_sign
+    _partial_: true
+    magnitude: false
+    zero: false
+  # Rectified [hand/foot-, finger/toe-, hand/foot+, finger/toe+]: contact inhibits the flexor and
+  # excites the extensor, as the original foot sensor weights.
+  flx:
+    F: [0, 0, -1, -1]
+    H: ${.F}
+  ext:
+    F: [0, 0, +1, +1]
+    H: ${.F}
+# The original constant command (0.3) is replaced by the subtask speed.
+brainstem_command:
+  _target_: models.QuadrupedBrainstemCommand
+  observation_key: target_vx
+  weight: 1.0
+  bias: 0.0
+constrainer:
+  _target_: models.Constrainer

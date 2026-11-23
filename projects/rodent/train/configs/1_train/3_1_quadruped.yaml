@@ -1,0 +1,14 @@
+# @package _global_
+# Quadruped NCAP ported to the rat.
+hydra:
+  sweeper:
+    params:
+      seed: 1
+
+defaults:
+  - /1_train/0_base_es
+  - /body/rat/controller: pos
+  - /body/rat/lumbar: fixed
+  - /model/rat/quadruped: limbs28/pos
+  - override /body/rat/actionable_dofs: limbs28
+  - _self_

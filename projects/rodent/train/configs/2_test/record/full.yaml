@@ -1,0 +1,45 @@
+# @package rollout_kwargs.record
+defaults:
+  - rg_tactile
+  - _self_
+
+observation: {_target_: policy.record_observations, _partial_: true}
+action: {_target_: policy.record_actions, _partial_: true}
+rg_units: {_target_: policy.record_rhythm_generation_units, _partial_: true}
+# The task's reward terms (weights and values; the reward is their weighted sum).
+reward_terms: {_target_: policy.record_reward_terms, _partial_: true}
+
+foot_touch: {_target_: policy.record_body, _partial_: true, getter: get_tactile_foot}
+# Each limb's summed tactile observation [4] (FL, FR, HL, HR).
+tactile: {_target_: policy.record_limb_tactile, _partial_: true}
+# Actuated DOFs in `RAT_ACTUATOR_NAMES` order [38]: positions (rad, or m for tendons), velocities,
+# actuator forces (N.m, or N for tendons; includes the body's passive torques) and MuJoCo passive
+# forces (NaN for tendons).
+proprio_pos: {_target_: policy.record_body, _partial_: true, getter: get_proprio_pos}
+proprio_vel: {_target_: policy.record_body, _partial_: true, getter: get_proprio_vel}
+proprio_trq: {_target_: policy.record_body, _partial_: true, getter: get_proprio_trq}
+proprio_passive: {_target_: policy.record_body, _partial_: true, getter: get_proprio_passive}
+actuator_vel: {_target_: policy.record_body, _partial_: true, getter: get_proprio_vel}
+actuator_trq: {_target_: policy.record_body, _partial_: true, getter: get_proprio_trq}
+# Every non-root joint position (passive vertebrae included), for kinematics of unactuated joints
+# and re-rendering.
+pose: {_target_: policy.record_body, _partial_: true, getter: get_pose}
+# World-frame contact forces on the hand_L, finger_L, hand_R, finger_R, foot_L, toe_L, foot_R and
+# toe_R bodies [8, 3] (N).
+foot_force: {_target_: policy.record_body, _partial_: true, getter: get_foot_contact_forces}
+foot_pos: {_target_: policy.record_body, _partial_: true, getter: get_foot_global_pos}
+foot_linvel: {_target_: policy.record_body, _partial_: true, getter: get_foot_global_linvel}
+root_pos: {_target_: policy.record_body, _partial_: true, getter: get_root_global_pos}
+# Root body world orientation (w, x, y, z), for the heading frame of the GRFs.
+root_quat: {_target_: policy.record_body, _partial_: true, getter: get_root_global_quat}
+root_linvel: {_target_: policy.record_body, _partial_: true, getter: get_root_global_linvel}
+root_angvel: {_target_: policy.record_body, _partial_: true, getter: get_root_global_angvel}
+# Pelvis world orientation (w, x, y, z), for pelvis angles in the heading frame.
+pelvis_quat: {_target_: policy.record_body, _partial_: true, getter: get_pelvis_global_quat}
+side_profiles:
+  _target_: policy.record_joint_side_profiles
+  joint_groups:
+    HR: [vertebra_1_extend, vertebra_2_bend, vertebra_3_twist, vertebra_4_extend, vertebra_5_bend,
+         vertebra_6_twist, hip_R_supinate, hip_R_abduct, hip_R_extend, knee_R, ankle_R, toe_R]
+    FR: [scapula_R_supinate, scapula_R_abduct, scapula_R_extend, shoulder_R_supinate,
+         shoulder_R_extend, elbow_R, wrist_R, finger_R]

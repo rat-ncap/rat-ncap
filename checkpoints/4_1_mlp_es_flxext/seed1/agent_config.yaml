@@ -1,0 +1,19 @@
+_target_: tonic.torch.agents.ES
+model:
+  _target_: models.mlp_es
+  actor_hidden_sizes:
+  - 256
+  - 256
+  actor_hidden_activation:
+    _target_: torch.nn.ReLU
+    _partial_: true
+  actor_hidden_init: null
+  actor_head_activation:
+    _target_: torch.nn.Hardtanh
+    _partial_: true
+    min_val: 0.0
+    max_val: 1.0
+  actor_head_bias: true
+  actor_head_init: null
+  observation_normalizer: true
+rollout_steps: 100

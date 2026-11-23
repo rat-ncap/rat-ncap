@@ -1,0 +1,10 @@
+# @package _global_
+# Rat NCAP position interface.
+defaults:
+  - /1_train/1_1_trq
+  - override /body/rat/controller: pos
+  - _self_
+
+# Only the torque interface exposes joint torques to the model.
+body:
+  actionable_trq: false

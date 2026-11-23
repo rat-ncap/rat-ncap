@@ -1,0 +1,11 @@
+# Python.
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ipynb_checkpoints/
+
+# Run outputs (the default `OUTPUT_ROOT`).
+outputs/
+
+# MuJoCo.
+MUJOCO_LOG.TXT

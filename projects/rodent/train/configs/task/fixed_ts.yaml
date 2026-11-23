@@ -1,0 +1,5 @@
+# @package task
+_target_: envs.tasks.MoveAtFixedVelocity_TrackSmooth
+body: ???
+termination_roll: 45. # (deg)
+termination_pitch: 45. # (deg)

@@ -1,0 +1,45 @@
+# @package _global_
+# Locomotion at trot speed with the V0v and V0d interneurons (descending diagonal V0v and V0d,
+# commissural V0d) ablated by scaling their activations by `weight` (0 = full ablation), for gait
+# classification against ablation strength. Records every RG unit, for the other interneurons'
+# activity under ablation.
+hydra:
+  sweeper:
+    params:
+      # One neuron group per run.
+      rollout_kwargs.policy.neurons: >-
+        [diagd_v0v_FL, diagd_v0v_FR, cross_v0d_FL, cross_v0d_FR,
+        diagd_v0d_FL, diagd_v0d_FR, cross_v0d_HL, cross_v0d_HR]
+      rollout_kwargs.policy.weight: >-
+        0.0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5,
+        0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1.0
+  sweep:
+    # Short job dirs: named after the neuron lists, they pass the 255-byte limit (Errno 36).
+    subdir: ${hydra.job.id}:v0v_v0d
+
+defaults:
+  - /2_test/0_base
+  - /2_test/record/rg_tactile
+  - _self_
+
+population: 30
+
+# Trot speed (0.4 m/s).
+subtasks:
+  target_vx:        [0.4]
+  reward_passive:   [0.2]
+  reward_vx_sparse: [0.2]
+  reward_vx_dense:  [0.6]
+  reward_pose:      [0.0]
+
+rollout_kwargs:
+  duration: 15.0
+  policy:
+    _target_: policy.AblatedPolicy
+    neurons: []
+    weight: 0.0
+  record:
+    rg_units: {_target_: policy.record_rhythm_generation_units, _partial_: true}
+
+compute:
+  time: 30
